@@ -49,7 +49,7 @@ Firewall cannot distinguish this traffic from random binary data or a custom gam
 Both client and server share a pre-configured password:
 
 ```erlang
--define(PROXY_C_S_KEY, "this is a password between your prox_c and proxy_s").
+-define(PROXY_C_S_KEY, "secret-password between your prox_c and proxy_s").
 ```
 The client sends this password in the encrypted CONNECT handshake. The server validates it before establishing any tunnel. Unauthorized connections are immediately closed.
 
@@ -91,3 +91,10 @@ erl -s https_proxy_s
 ```bash
 erl -s https_proxy_c
 ```
+
+**Step 5: Configure Browser**
+
+Set your browser's HTTPS proxy settings:
+
+- Proxy Address: 127.0.0.1
+- Proxy Port: 10088
