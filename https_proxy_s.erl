@@ -17,11 +17,11 @@ tunnel(Sock, Tsock) ->
         case gen_tcp:send(Tsock, B) of
           ok -> F();
           {error, R} ->
-            io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+            io:format("error from tsock: ~p ~w ~w~n", [R, Tsock, Sock]),
             gen_tcp:close(Tsock), gen_tcp:close(Sock)
         end;
       {error, R} ->
-        io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+        io:format("error from sock: ~p ~w ~w~n", [R, Sock, Tsock]),
         gen_tcp:close(Sock), gen_tcp:close(Tsock)
     end end),
   gen_tcp:controlling_process(Sock, Pid1),
@@ -33,11 +33,11 @@ tunnel(Sock, Tsock) ->
         case gen_tcp:send(Sock, B) of
           ok -> F();
           {error, R} ->
-            io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+            io:format("error from sock: ~p ~w ~w~n", [R, Sock, Tsock]),
             gen_tcp:close(Sock), gen_tcp:close(Tsock)
         end;
       {error, R} ->
-        io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+        io:format("error from tsock: ~p ~w ~w~n", [R, Tsock, Sock]),
         gen_tcp:close(Tsock), gen_tcp:close(Sock)
     end end),
   gen_tcp:controlling_process(Tsock, Pid2).
@@ -79,7 +79,7 @@ recv(Sock) ->
               ok = gen_tcp:send(Sock, term_to_binary(InitRsp)),
               tunnel(Sock, Tsock);
             {error, R} ->
-              io:format("connect to target host failed: ~w ~p ~w~n", [R, TargetHost, Sock]),
+              io:format("connect to target host failed: ~p ~p ~w~n", [R, TargetHost, Sock]),
               gen_tcp:close(Sock)
           end;
         _ ->
@@ -90,7 +90,7 @@ recv(Sock) ->
     {tcp_closed, Sock} ->
       io:format("tcp closed: ~w~n", [Sock]);
     {tcp_error, Sock, Reason} ->
-      io:format("tcp error reason: ~w ~w~n", [Reason, Sock]),
+      io:format("tcp error reason: ~p ~w~n", [Reason, Sock]),
       gen_tcp:close(Sock);
     Other -> io:format("other in recv: ~p ~w~n", [Other, Sock])
   end.

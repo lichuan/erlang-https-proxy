@@ -7,7 +7,7 @@
 -define(PROXY_C_S_KEY, "your-secret-password").
 
 start() ->
-  {ok, Lsock} = gen_tcp:listen(?PROXY_C_PORT, [binary, {packet, http}, {active, false}]),
+  {ok, Lsock} = gen_tcp:listen(?PROXY_C_PORT, [binary, {packet, http}, {active, false}, {reuseaddr, true}]),
   io:format("listen sock: ~w~n", [Lsock]),
   accept(Lsock).
 
@@ -19,11 +19,11 @@ tunnel(Sock, Tsock) ->
         case gen_tcp:send(Tsock, B) of
           ok -> F();
           {error, R} ->
-            io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+            io:format("error from tsock: ~p ~w ~w~n", [R, Tsock, Sock]),
             gen_tcp:close(Tsock), gen_tcp:close(Sock)
         end;
       {error, R} ->
-        io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+        io:format("error from sock: ~p ~w ~w~n", [R, Sock, Tsock]),
         gen_tcp:close(Sock), gen_tcp:close(Tsock)
     end end),
   gen_tcp:controlling_process(Sock, Pid1),
@@ -35,11 +35,11 @@ tunnel(Sock, Tsock) ->
         case gen_tcp:send(Sock, B) of
           ok -> F();
           {error, R} ->
-            io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+            io:format("error from sock: ~p ~w ~w~n", [R, Sock, Tsock]),
             gen_tcp:close(Sock), gen_tcp:close(Tsock)
         end;
       {error, R} ->
-        io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+        io:format("error from tsock: ~p ~w ~w~n", [R, Tsock, Sock]),
         gen_tcp:close(Tsock), gen_tcp:close(Sock)
     end end),
   gen_tcp:controlling_process(Tsock, Pid2).
@@ -85,7 +85,7 @@ recv_with_host(Sock, TargetHost) ->
               io:format("send browser established success: ~w ~w~n", [Sock, Ssock]),
               tunnel(Sock, Ssock);
             {error, R} ->
-              io:format("send browser established failed: ~w ~w ~w~n", [R, Sock, Ssock]),
+              io:format("send browser established failed: ~p ~w ~w~n", [R, Sock, Ssock]),
               gen_tcp:close(Sock), gen_tcp:close(Ssock)
           end;
         {error, R} ->
@@ -93,7 +93,7 @@ recv_with_host(Sock, TargetHost) ->
           gen_tcp:close(Sock)
       end;
     {http, Sock, Data} ->
-      io:format("http data: ~w ~w~n", [Data, Sock]),
+      io:format("http data: ~p ~w~n", [Data, Sock]),
       recv_with_host(Sock, TargetHost);
     Other -> io:format("other in target: ~w ~w~n", [Other, Sock])
   end.
@@ -106,17 +106,17 @@ recv(Sock) ->
       [TargetHost|_] = string:split(Hostport, ":"),
       recv_with_host(Sock, TargetHost);
     {http, Sock, {http_error, R}} ->
-      io:format("http error: ~w~n", [R]),
+      io:format("http error: ~p~n", [R]),
       gen_tcp:close(Sock);
     {http, Sock, Data} ->
       io:format("http data: ~p ~w~n", [Data, Sock]),
       recv(Sock);
-    {tcp, Sock, Data} -> io:format("tcp data: ~w ~w~n", [Data, Sock]);
+    {tcp, Sock, Data} -> io:format("tcp data: ~p ~w~n", [Data, Sock]);
     {tcp_passive, Sock} -> io:format("tcp passive: ~w~n", [Sock]);
     {tcp_closed, Sock} ->
       io:format("tcp closed: ~w~n", [Sock]);
     {tcp_error, Sock, Reason} ->
-      io:format("tcp error reason: ~w ~w~n", [Reason, Sock]),
+      io:format("tcp error reason: ~p ~w~n", [Reason, Sock]),
       gen_tcp:close(Sock);
     Other -> io:format("other in recv: ~p ~w~n", [Other, Sock])
   end.
