@@ -112,8 +112,8 @@ recv(Sock) ->
       recv(Sock);
     {tcp, Sock, Data} -> io:format("tcp data: ~w ~w~n", [Data, Sock]);
     {tcp_passive, Sock} -> io:format("tcp passive: ~w~n", [Sock]);
-    {tcp_closed, Anysock} ->
-      io:format("tcp closed: ~w ~w~n", [Sock, Anysock]);
+    {tcp_closed, Sock} ->
+      io:format("tcp closed: ~w~n", [Sock]);
     {tcp_error, Sock, Reason} ->
       io:format("tcp error reason: ~w ~w~n", [Reason, Sock]),
       gen_tcp:close(Sock);
