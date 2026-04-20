@@ -106,7 +106,8 @@ recv(Sock) ->
       [TargetHost|_] = string:split(Hostport, ":"),
       recv_with_host(Sock, TargetHost);
     {http, Sock, {http_error, R}} ->
-      io:format("http error: ~w~n", [R]);
+      io:format("http error: ~w~n", [R]),
+      gen_tcp:close(Sock);
     {http, Sock, Data} ->
       io:format("http data: ~p ~w~n", [Data, Sock]),
       recv(Sock);
