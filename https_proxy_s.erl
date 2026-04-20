@@ -14,31 +14,31 @@ tunnel(Sock, Tsock) ->
     case gen_tcp:recv(Sock, 0) of
       {ok, B} ->
         io:format("data from sock arrive ~w ~w ~w~n", [byte_size(B), Sock, Tsock]),
-        % here you can encrypt traffic
         case gen_tcp:send(Tsock, B) of
           ok -> F();
-          {error, closed} -> gen_tcp:close(Tsock)
+          {error, R} ->
+            io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+            gen_tcp:close(Tsock), gen_tcp:close(Sock)
         end;
       {error, R} ->
-        io:format("error from sock: ~w ~w~n", [R, Sock]),
-        gen_tcp:close(Sock),
-        gen_tcp:close(Tsock)
+        io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+        gen_tcp:close(Sock), gen_tcp:close(Tsock)
     end end),
   gen_tcp:controlling_process(Sock, Pid1),
 
   Pid2 = spawn(fun F() ->
     case gen_tcp:recv(Tsock, 0) of
       {ok, B} ->
-        io:format("data from tsock arrive ~w ~w ~w~n", [byte_size(B), Sock, Tsock]),
-        % here you need decrypt traffic
+        io:format("data from tsock arrive ~w ~w ~w~n", [byte_size(B), Tsock, Sock]),
         case gen_tcp:send(Sock, B) of
           ok -> F();
-          {error, closed} -> gen_tcp:close(Sock)
+          {error, R} ->
+            io:format("error from sock: ~w ~w ~w~n", [R, Sock, Tsock]),
+            gen_tcp:close(Sock), gen_tcp:close(Tsock)
         end;
       {error, R} ->
-        io:format("error from tsock: ~w ~w~n", [R, Tsock]),
-        gen_tcp:close(Tsock),
-        gen_tcp:close(Sock)
+        io:format("error from tsock: ~w ~w ~w~n", [R, Tsock, Sock]),
+        gen_tcp:close(Tsock), gen_tcp:close(Sock)
     end end),
   gen_tcp:controlling_process(Tsock, Pid2).
 
@@ -46,21 +46,21 @@ encrypt_binary(Bin) ->
   Seeds = [29,220,39,154,155,183,36,101,240,97,60,232,246,60,81,32,173,79,158,172],
   fun F(_, <<>>) -> <<>>; F(Idx, Rest) ->
     Seed = lists:nth(Idx rem 20 + 1, Seeds),
-    <<H, Rest1/binary>> = Rest,
+    <<H, R/binary>> = Rest,
     Val = (H + Seed) rem 256,
-    <<Val, (F(Idx + 1, Rest1))/binary>>
+    <<Val, (F(Idx + 1, R))/binary>>
   end(0, Bin).
 
 decrypt_binary(Bin) ->
   Seeds = [29,220,39,154,155,183,36,101,240,97,60,232,246,60,81,32,173,79,158,172],
   fun F(_, <<>>) -> <<>>; F(Idx, Rest) ->
     Seed = lists:nth(Idx rem 20 + 1, Seeds),
-    <<H, Rest1/binary>> = Rest,
+    <<H, R/binary>> = Rest,
     if
       H - Seed < 0 -> Val = 256 + H - Seed;
       true -> Val = H - Seed
     end,
-    <<Val, (F(Idx + 1, Rest1))/binary>>
+    <<Val, (F(Idx + 1, R))/binary>>
   end(0, Bin).
 
 recv(Sock) ->
